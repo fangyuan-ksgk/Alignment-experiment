@@ -1,0 +1,5 @@
+/Users/fangyuanyu/anaconda3/lib/python3.11/site-packages/trl/trainer/sft_trainer.py:159: UserWarning: You passed a model_id to the SFTTrainer. This will automatically create an `AutoModelForCausalLM` or a `PeftModel` (if you passed a `peft_config`) for you.
+  warnings.warn(
+/Users/fangyuanyu/anaconda3/lib/python3.11/site-packages/trl/trainer/sft_trainer.py:223: UserWarning: You didn't pass a `max_seq_length` argument to the SFTTrainer, this will default to 1024
+  warnings.warn(
+/Users/fangyuanyu/anaconda3/lib/python3.11/site-packages/trl/trainer/sft_trainer.py:290: UserWarning: You passed a tokenizer with `padding_side` not equal to `right` to the SFTTrainer. This might lead to some unexpected behaviour due to overflow issues when training a model in half-precision. You might consider adding `tokenizer.padding_side = 'right'` to your code.

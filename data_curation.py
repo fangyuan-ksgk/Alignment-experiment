@@ -33,8 +33,10 @@ def map_to_answer(anno):
     else:
         return 'No'
 
+{"messages": [{"role": "system", "content": "You are helpful"}, {"role": "user", "content": "How far is the Moon from Earth?"}, {"role": "assistant", "content": "..."}]}
 
-def prepare_sft_dataset(conversation_pairs, annotations, query_template, reverse_query_template, synonyms):
+
+def prepare_sft_dataset(conversation_pairs, annotations, query_template, reverse_query_template, synonyms, mode = 1):
     dataset = []
 
     for (conversation_a, conversation_b), annotation in zip(conversation_pairs, annotations):
@@ -44,29 +46,54 @@ def prepare_sft_dataset(conversation_pairs, annotations, query_template, reverse
             conversation_a=conversation_a,
             conversation_b=conversation_b,
             answer=map_to_answer(annotation),
-            desc = random.choice(synonyms)
+            desc = syn
             )
             query, answer = split_query(query)
-            dataset.append({'prompt': query, 'completion': answer})
+            if mode == 1:
+                mes = {"prompt": query, "completion": answer}
+            else:
+                mes = {"messages": [{"role": "system", "content": "You are helpful"}, {"role": "user", "content": query}, {"role": "assistant", "content": answer}]}
+            dataset.append(mes)
 
             reverse_query = reverse_query_template.format(
             conversation_a = conversation_a,
             conversation_b = conversation_b,
             answer = map_to_answer(annotation),
-            desc = random.choice(synonyms)
+            desc = syn
             )
-            query, answer = split_query(query)
-            dataset.append({'prompt': query, 'completion': answer})
+            query, answer = split_query(reverse_query)
+            if mode == 1:
+                mes = {"prompt": query, "completion": answer}
+            else:
+                mes = {"messages": [{"role": "system", "content": "You are helpful"}, {"role": "user", "content": query}, {"role": "assistant", "content": answer}]}
+            dataset.append(mes)
 
     return dataset
 
-sft_dataset = prepare_sft_dataset(conversation_pairs, annos, query_template, reverse_query_template, synonyms)
 
 
 import pandas as pd
-from datasets import Dataset
+from datasets import Dataset, DatasetDict
 from huggingface_hub import login
-login("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")
-df = pd.DataFrame(sft_dataset, columns=['prompt','completion'])
-dataset = Dataset.from_pandas(df)
-dataset.push_to_hub("Ksgk-fy/alignment-test-sft")
+from sklearn.model_selection import train_test_split
+import os
+login(os.environ["HF_TOKEN"])
+
+sft_dataset = prepare_sft_dataset(conversation_pairs, annos, query_template, reverse_query_template, synonyms, mode=1)
+df = pd.DataFrame(sft_dataset, columns=["prompt", "completion"])
+train_df, test_df = train_test_split(df, test_size=0.2, random_state=42) # Split the dataset into train and test subsets
+dataset_dict = DatasetDict({
+    "train": Dataset.from_pandas(train_df),
+    "test": Dataset.from_pandas(test_df)
+}) # Create a DatasetDict with train and test splits
+dataset_dict.push_to_hub("Ksgk-fy/alignment-sft-test01") # Push the dataset to the Hugging Face Hub
+
+
+sft_dataset = prepare_sft_dataset(conversation_pairs, annos, query_template, reverse_query_template, synonyms, mode = 1)
+df = pd.DataFrame(sft_dataset, columns=["prompt", "completion"])
+train_df, test_df = train_test_split(df, test_size=0.2, random_state=42)
+dataset_dict = DatasetDict({
+    "train": Dataset.from_pandas(train_df),
+    "test": Dataset.from_pandas(test_df)
+})
+dataset_dict.push_to_hub("Ksgk-fy/alignment-sft-test02")
