@@ -1,6 +1,9 @@
 # Alignment-toy
 
-Toy Example for Preference Alignment
+Toy Example for Preference Alignment. We have 5 responses, and pairwise comparative annotation is provided. 
+Our target is for the model to do two things: 
+    1. Provide Yes / No answer to the question "Is A better than B?" 
+    2. Align with annotated preference. 
 
 ## Dataset Curation: 
 
@@ -18,3 +21,7 @@ python dataset_curation.py -m 2
 ```python
 python dataset_curation.py -m 3
 ```
+
+## Experiment: 
+
+1. Supervised Fine-Tuning with LoRA Adaptor
