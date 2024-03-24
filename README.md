@@ -23,5 +23,6 @@ python dataset_curation.py -m 3
 ```
 
 ## Experiment: 
-
+Notebook file location: ./colab/
 1. Supervised Fine-Tuning with LoRA Adaptor
+2. Supervised Fine-Tuning with DoRA Adaptor
