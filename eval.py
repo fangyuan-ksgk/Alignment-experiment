@@ -15,7 +15,6 @@ login(os.environ["HF_TOKEN"])
 # parser.add_argument("--dataset_name", type=str, required=True, help="Name of the dataset to evaluate.")
 # args = parser.parse_args()
 
-github_token = "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"
 
 stub = modal.Stub(
     image = Image.debian_slim(python_version="3.10")
