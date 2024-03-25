@@ -24,7 +24,6 @@ stub = modal.Stub(
     .apt_install("git")
     .apt_install( "gcc")
     .run_commands(f"export HF_TOKEN={os.environ['HF_TOKEN']}")
-    .run_commands("export WANDB_API_KEY=0a22c2f6b4be0592a7867dbc40d6e83fcfdd305a")
     .run_commands("git config --global user.name ksgk-fangyuan",
                   "git config --global user.email fangyuan.yu18@gmail.com",
                   )
