@@ -26,3 +26,10 @@ python dataset_curation.py -m 3
 Notebook file location: ./colab/
 1. Supervised Fine-Tuning with LoRA Adaptor
 2. Supervised Fine-Tuning with DoRA Adaptor
+3. Model Merging
+
+## Evaluation:
+Average Perplexity on instruction dataset. Evaluation ran on modal platform. 
+```
+modal run eval.py --model-id xxx --dataset-name xxx
+```
