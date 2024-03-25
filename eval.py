@@ -1,20 +1,14 @@
-# Run this thing on Modal platform
+# Modal-based Evaluation Script
 import modal
 from modal import Image, Stub, gpu
-from evaluator import format_prompt
 import torch
-from tqdm import tqdm as tqdm
+from tqdm import tqdm
 from huggingface_hub import login
 import argparse
+from evaluator import format_prompt
 import os
-# import argparse
+
 login(os.environ["HF_TOKEN"])
-
-# parser = argparse.ArgumentParser(description="Evaluate model perplexity.")
-# parser.add_argument("--model_id", type=str, required=True, help="Model ID to evaluate.")
-# parser.add_argument("--dataset_name", type=str, required=True, help="Name of the dataset to evaluate.")
-# args = parser.parse_args()
-
 
 stub = modal.Stub(
     image = Image.debian_slim(python_version="3.10")
@@ -32,11 +26,9 @@ stub = modal.Stub(
 @stub.function(gpu = modal.gpu.A100(size="40GB"))
 def evaluate_perplexity(model_id, dataset_name):
 
-    import argparse, datasets, transformers
     from datasets import load_dataset
     from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments
     
-    evaluate_perplexity(model, tokenizer, dataset)
 
     model = AutoModelForCausalLM.from_pretrained(model_id)
     tokenizer = AutoTokenizer.from_pretrained(model_id)
@@ -67,22 +59,26 @@ def evaluate_perplexity(model_id, dataset_name):
 
         loss = torch.nn.functional.cross_entropy(target_logits.reshape(-1, target_logits.size(-1)), target_ids, reduction="none")
 
-        perplexity = loss.mean()
+        perplexity = loss.mean().cpu()
         perplexities.append(perplexity)
+
+    # for some reason it needs to go back to CPU before returning
+    del model
+    del tokenizer
 
     return sum(perplexities) / len(perplexities)
 
 
 
 @stub.local_entrypoint()
-def main():
-    parser = argparse.ArgumentParser(description="Evaluate model perplexity on a dataset")
-    parser.add_argument("--model_id", type=str, default="HuggingFaceH4/zephyr-7b-beta", required=False, help="The model identifier from Huggingface's Model Hub")
-    parser.add_argument("--dataset_name", type=str, default="Ksgk-fy/alignment-sft-test01", required=False, help="The name of the dataset to evaluate on")
-    args = parser.parse_args()
+def main(model_id = "HuggingFaceH4/zephyr-7b-beta", 
+         dataset_name = "Ksgk-fy/alignment-sft-test01"):
 
-    evaluate_perplexity.remote(args.model_id, args.dataset_name)
+    avg_perplexity = evaluate_perplexity.remote(model_id, dataset_name)
+    print("Average Perplexity:", avg_perplexity)
+    info = {"Model ID": model_id, "Dataset Name": dataset_name, "Average Perplexity": avg_perplexity}
 
-
-# if __name__ == "__main__":
-#     main()
+    # Save info to a text file
+    os.makedirs("./merge_info", exist_ok=True)
+    with open("./merge_info/info.txt", "w") as file:
+        file.write(str(info))
