@@ -29,7 +29,7 @@ Notebook file location: ./colab/
 3. Model Merging
 
 ## Evaluation:
-Average Perplexity on instruction dataset. Evaluation ran on modal platform. 
+Average Perplexity on instruction dataset adopted as evaluation metric. Evaluation ran on modal platform. 
 ```
 modal run eval.py --model-id xxx --dataset-name xxx
 ```
