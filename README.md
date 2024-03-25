@@ -27,6 +27,7 @@ Notebook file location: ./colab/
 1. Supervised Fine-Tuning with LoRA Adaptor
 2. Supervised Fine-Tuning with DoRA Adaptor
 3. Model Merging
+4. Evolutionary Model Merging
 
 ## Evaluation:
 Average Perplexity on instruction dataset adopted as evaluation metric. Evaluation ran on modal platform. 
