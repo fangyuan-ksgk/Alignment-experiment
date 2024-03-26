@@ -85,6 +85,9 @@ def evaluate_config(unique_id):
     result = subprocess.run(command, check=True, stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE, text=True)
 
+    print("=================================")
+    print("         Evaluation Complete")
+    print("=================================")
     score = random.random()  # Placeholder for demonstration
     return score
 
