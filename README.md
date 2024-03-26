@@ -1,4 +1,4 @@
-# Alignment-Experiment
+# Alignment experiment: What does it take to align a LLM?
 
 Toy Example for Preference Alignment. We have 5 responses, and pairwise comparative annotation is provided. 
 Our target is for the model to do two things: 
