@@ -26,6 +26,10 @@ dtype: bfloat16
 random_seed: 0
     """
 
+def save_config(config, file_path):
+    with open(file_path, 'w') as file:
+        yaml.dump(config, file)
+
 def generate_random_config():
     """
     Slerp configuration generator
@@ -33,31 +37,38 @@ def generate_random_config():
     w = [random.uniform(0, 1) for _ in range(6)]
     config = get_slerp_config(w)
     unique_id = '-'.join([str(np.round(x,2)) for x in w])
-    return config, unique_id
+    print('unique_id:', unique_id)
+
+    # Save the configuration to a YAML file
+    name = f"{unique_id}"
+    local_file_path = f"./config/{name}.yaml"
+    save_config(config, local_file_path)
+
+    return name
 
 
-def evaluate_config(config, unique_id):
-    # Implement your evaluation function here
-    # This function should return a fitness score for the given config
-    # You can use your own criteria to evaluate the merged model's performance
-    # For example, you can measure the accuracy, perplexity, or any other metric
-    # Return a higher score for better configurations
 
+def evaluate_config(unique_id):
+    # Merge according to the configuration, Evaluate the merged model with instruction dataset
+    command = "ls"
+    result = subprocess.run(command, check=True, stdout=subprocess.PIPE,
+                            stderr=subprocess.PIPE, text=True)
+    print("List current directory: ", result.stdout)
     # Evaluation requires running the merging process & Evaluation script
     # merge: modal run merge.py --config yaml_config 
     # note that the yaml_config is the string config that we have above
     # TBD: addition of unique_id to create new model name
-    command = f"modal run merge.py --config '{config}' --unique_id {unique_id}"
+    command = ["modal", "run", "merge.py", "--unique-id", unique_id]
     result = subprocess.run(command, check=True, stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE, text=True)
-    model_name = result.stdout
+    model_name = result.stdout.splitlines()
     print(f"Model name: {model_name}")
 
     # Evaluate the model
     # eval: modal run eval.py --model_name model_name
     # note that model_name is user_name/model_name in fact
     hf_user_name = "Ksgk-fy"
-    command = f"modal run eval.py --model_name {hf_user_name}/{model_name}{unique_id}"
+    command = ["modal", "run", "eval.py", "--model-name", f"{hf_user_name}/{model_name}{unique_id}"]
     result = subprocess.run(command, check=True, stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE, text=True)
 
@@ -67,8 +78,9 @@ def evaluate_config(config, unique_id):
 def evolve_configs(population_size, generations):
     population = [generate_random_config() for _ in range(population_size)]
 
+
     for generation in range(generations):
-        fitness_scores = [evaluate_config(config) for config in population]
+        fitness_scores = [evaluate_config(unique_id) for unique_id in population]
 
         # Select the best configurations based on fitness scores
         best_configs = [config for _, config in sorted(zip(fitness_scores, population), reverse=True)][:population_size//2]
@@ -88,6 +100,10 @@ def evolve_configs(population_size, generations):
 
     best_config = max(population, key=evaluate_config)
     return best_config
+
+# Make sure direcroty exists | Copy to cloud storage
+import os
+os.makedirs('./config', exist_ok=True)
 
 # Run the evolutionary search
 population_size = 10
