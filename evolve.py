@@ -46,6 +46,15 @@ def generate_random_config():
 
     return name
 
+def read_model_name():
+    try:
+        with open("./merge_info/model_name.txt", "r") as f:
+            model_name = f.read().strip()
+        return model_name
+    except FileNotFoundError:
+        print("Model name file not found.")
+        return None
+
 
 
 def evaluate_config(unique_id):
@@ -61,23 +70,30 @@ def evaluate_config(unique_id):
     command = ["modal", "run", "merge.py", "--unique-id", unique_id]
     result = subprocess.run(command, check=True, stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE, text=True)
-    model_name = result.stdout.splitlines()
+    print("=================================")
+    print("         Merging Complete")
+    print("=================================")
+
+    model_name = read_model_name()
     print(f"Model name: {model_name}")
 
     # Evaluate the model
     # eval: modal run eval.py --model_name model_name
     # note that model_name is user_name/model_name in fact
     hf_user_name = "Ksgk-fy"
-    command = ["modal", "run", "eval.py", "--model-name", f"{hf_user_name}/{model_name}{unique_id}"]
+    command = ["modal", "run", "eval.py", "--model-name", f"{hf_user_name}/{model_name}"]
     result = subprocess.run(command, check=True, stdout=subprocess.PIPE,
                             stderr=subprocess.PIPE, text=True)
 
     score = random.random()  # Placeholder for demonstration
     return score
 
+# Honestly I feel like a LLM might have a better intuition on where things should be going, but this is also fine (??)
+# the random spawning process looks a bit dumb, plus, how come there are only two models getting merged here???
+# fix it, think about it!
+
 def evolve_configs(population_size, generations):
     population = [generate_random_config() for _ in range(population_size)]
-
 
     for generation in range(generations):
         fitness_scores = [evaluate_config(unique_id) for unique_id in population]

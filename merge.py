@@ -402,12 +402,18 @@ def merge_models_with_config(unique_id: str = "") -> str:
     print("Upload model")
     upload_model(api, USERNAME, model_name)
 
+
     return model_name
 
 
 @stub.local_entrypoint()
 def main(unique_id: str = ""):
     model_name = merge_models_with_config.remote(unique_id)
+
+    # Save the model name locally
+    with open("./merge_info/model_name.txt", "w") as f:
+        f.write(model_name)
+
     return model_name
         
     

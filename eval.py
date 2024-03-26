@@ -11,25 +11,28 @@ import os
 login(os.environ["HF_TOKEN"])
 
 stub = modal.Stub(
-    image = Image.debian_slim(python_version="3.10")
+    image = Image.debian_slim(python_version="3.11")
     .pip_install(
-        ["transformers", "datasets", "huggingface_hub", "torch", "tqdm"]
+        ["transformers", "datasets", "huggingface_hub", "torch", "tqdm", "psutil", "sentencepiece"]
     )
     .apt_install("git")
     .apt_install( "gcc")
-    .run_commands(f"export HF_TOKEN={os.environ['HF_TOKEN']}")
     .run_commands("git config --global user.name ksgk-fangyuan",
                   "git config --global user.email fangyuan.yu18@gmail.com",
                   )
 )
 
-@stub.function(gpu = modal.gpu.A100(size="40GB"))
+@stub.function(gpu = modal.gpu.A100(size="40GB"),
+               secrets=[modal.Secret.from_name("ksgk-secret")],
+               timeout=2400)
 def evaluate_perplexity(model_id, dataset_name):
 
+
+    from huggingface_hub import login
     from datasets import load_dataset
     from transformers import AutoModelForCausalLM, AutoTokenizer, Trainer, TrainingArguments
     
-
+    login(os.environ["HF_TOKEN"])
     model = AutoModelForCausalLM.from_pretrained(model_id)
     tokenizer = AutoTokenizer.from_pretrained(model_id)
     dataset = load_dataset(dataset_name, split="test")
@@ -78,7 +81,15 @@ def main(model_id = "HuggingFaceH4/zephyr-7b-beta",
     print("Average Perplexity:", avg_perplexity)
     info = {"Model ID": model_id, "Dataset Name": dataset_name, "Average Perplexity": avg_perplexity}
 
+
+    os.makedirs("./merge_info", exist_ok=True)
+
     # Save info to a text file
     os.makedirs("./merge_info", exist_ok=True)
-    with open("./merge_info/info.txt", "w") as file:
-        file.write(str(info))
+    with open("./merge_info/info.txt", "a") as file:
+        file.write(str(info) + "\n")
+
+    # # Save info to a text file
+    # os.makedirs("./merge_info", exist_ok=True)
+    # with open("./merge_info/info.txt", "w") as file:
+    #     file.write(str(info))
