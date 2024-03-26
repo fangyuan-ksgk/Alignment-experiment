@@ -1,4 +1,4 @@
-import modal
+import modal, yaml
 from modal import Image, Stub, gpu
 from huggingface_hub import login
 import os
@@ -24,6 +24,8 @@ stub = modal.Stub(
     .run_commands("cd /root && git clone https://github.com/Weyaxi/scrape-open-llm-leaderboard && pip install -r ./scrape-open-llm-leaderboard/requirements.txt")
     .run_commands("ls")
     .run_commands("pwd")
+    .copy_local_dir(local_path="./config", remote_path="/root/config")
+    .run_commands("ls /root/config")
 )
 # Lesson learned 1: .run_commands is done in the main diretory, which contains /root and /data
 # however, the stub.function is executed in /root directory, so git clone should be done in /root
@@ -81,6 +83,8 @@ def make_df(file_path: str, n_rows: int) -> pd.DataFrame:
     print("Make Dataframe -- Working directory: ", result.stdout)
     result = subprocess.run(["ls"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
     print("List directory: ", result.stdout)
+    result = subprocess.run(["ls", "./config"], check=True, stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True)
+    print("List ./config directory: ", result.stdout)
 
     columns = ["Available on the hub", "Model sha", "T", "Type", "Precision",
               "Architecture", "Weight type", "Hub ❤️", "Flagged", "MoE"]
@@ -335,9 +339,14 @@ def upload_model(api: HfApi, username: str, model_name: str) -> None:
         folder_path="/data/merge",
     )
 
+def load_config(file_path):
+    # Read the YAML file
+    with open(file_path, 'r') as file:
+        config = yaml.load(file, Loader=yaml.FullLoader)
+    return config
 
 @stub.function(cpu=8.0, memory=262144, timeout=1200)
-def merge_models_with_config(config: str = "", unique_id: str = "") -> str:
+def merge_models_with_config(unique_id: str = "") -> str:
     """
     Merge models based on the given configuration.
     """
@@ -367,10 +376,16 @@ def merge_models_with_config(config: str = "", unique_id: str = "") -> str:
     print(f"License: {license}")
 
     # Merge configs
-    if config == "":
+    if unique_id == "":
+        print("Create new config")
         yaml_config = create_config(models)
     else:
-        yaml_config = config
+        print("Load existing config")
+        yaml_config = load_config(f"./config/{unique_id}.yaml")
+
+    # save the config in ./config.yaml | rewrite if already exists
+    with open('config.yaml', 'w', encoding="utf-8") as f:
+        f.write(yaml_config)
 
     print(f"YAML config:{yaml_config}")
     print(f"Data size: {human_readable_size(get_size(dir_path))}")
@@ -391,6 +406,10 @@ def merge_models_with_config(config: str = "", unique_id: str = "") -> str:
 
 
 @stub.local_entrypoint()
-def main(config: str = "", unique_id: str = ""):
-    model_name = merge_models_with_config.remote(config, unique_id)
+def main(unique_id: str = ""):
+    model_name = merge_models_with_config.remote(unique_id)
     return model_name
+        
+    
+
+
