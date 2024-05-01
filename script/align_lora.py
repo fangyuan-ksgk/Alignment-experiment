@@ -13,13 +13,28 @@ from trl import SFTTrainer
 from tqdm import tqdm as tqdm
 import numpy
 import json
+import argparse
+import os
 
-
+# Config
 dataset_name = "Ksgk-fy/alignment-sft-test2-mode-1"
 base_model_id = "HuggingFaceH4/zephyr-7b-beta" # base model id
-new_model_id = "Zaligner-v1-test01"
 
+# Setup argument parser
+parser = argparse.ArgumentParser(description="Run LoRA alignment training.")
+parser.add_argument("--bs", type=int, default=16, help="Batch size for training.")
+parser.add_argument("--id", type=int, default=16, help="ID for the fine-tuned adaptor")
+args = parser.parse_args()
 
+# Set the ID for the fine-tuned adaptor
+new_model_id = f"Zaligner-v1-test{args.id}"
+# Retrieve batch size from arguments
+batch_size = args.batch_size
+
+print(f"Using batch size: {batch_size}")
+print(f"Using model id: {new_model_id}")
+
+HF_TOKEN = os.environ.get("HF_TOKEN")
 login(
   token=HF_TOKEN, # ADD YOUR TOKEN HERE
   add_to_git_credential=True
@@ -40,7 +55,7 @@ model = AutoModelForCausalLM.from_pretrained(
     torch_dtype=torch.bfloat16,
     quantization_config=bnb_config
 )
-tokenizer = AutoTokenizer.from_pretrained(model_id)
+tokenizer = AutoTokenizer.from_pretrained(base_model_id)
 tokenizer.padding_side = 'right' # to prevent warnings
 
 # LoRA config based on QLoRA paper & Sebastian Raschka experiment
