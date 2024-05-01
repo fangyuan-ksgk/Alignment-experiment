@@ -24,9 +24,10 @@ python dataset_curation.py -m 3
 
 ## Experiment: 
 Notebook file location: ./colab/
-1. Supervised Fine-Tuning with LoRA Adaptor
-2. Supervised Fine-Tuning with DoRA Adaptor
-3. Evolutionary Model Merging
+1. Supervised Fine-Tuning with LoRA Adaptor (fine-tuning is quite inefficient for small-sized dataset)
+2. Supervised Fine-Tuning with DoRA Adaptor (same as above, plus balancing fine-tune dataset means nothing due to the pre-train dataset's tilted distribution)
+3. Evolutionary Model Merging (unstable and not simple enough)
+4. Representation Finetuning (This one rocks)
 
 ## Evaluation:
 Average Perplexity on instruction dataset adopted as evaluation metric. Evaluation ran on modal platform. 
