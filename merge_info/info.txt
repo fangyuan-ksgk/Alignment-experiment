@@ -1,2 +1,0 @@
-{'Model ID': 'Ksgk-fy/M7Percival_010.09-0.82-0.7-0.27-0.86-0.44-7B', 'Dataset Name': 'Ksgk-fy/alignment-sft-test01', 'Average Perplexity': tensor(77.2255)}
-{'Model ID': 'Ksgk-fy/M7Percival_010.47-0.04-0.7-0.86-0.16-0.31-7B', 'Dataset Name': 'Ksgk-fy/alignment-sft-test01', 'Average Perplexity': tensor(77.1046)}
